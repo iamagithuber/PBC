@@ -28,6 +28,7 @@ class User(db.Model):
 class LoginForm(FlaskForm):
     username = StringField('用户名', validators=[DataRequired()])
     password = PasswordField('密码', validators=[DataRequired()])
+
     submit = SubmitField('登录')
 
 # 注册表单
