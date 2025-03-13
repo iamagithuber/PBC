@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}首页{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-header">
+        {% if 'user' in session %}
+            <h2>欢迎回来，{{ session['user'] }}！</h2>
+            <p class="text-muted">您已成功登录系统</p>
+        {% else %}
+            <h2>欢迎访问</h2>
+            <p class="text-muted">请登录或注册账户</p>
+        {% endif %}
+    </div>
+
+    <div class="text-center mt-4">
+        {% if 'user' in session %}
+            <a href="{{ url_for('logout') }}" class="btn btn-danger btn-lg">退出登录</a>
+        {% else %}
+            <div class="d-grid gap-3">
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">立即登录</a>
+                <a href="{{ url_for('register') }}" class="btn btn-outline-secondary btn-lg">注册账户</a>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if not 'user' in session %}
+    <div class="mt-5 text-muted">
+        <h5>系统功能：</h5>
+        <ul class="list-unstyled">
+            <li>✅ 安全的用户认证系统</li>
+            <li>🔒 密码加密存储</li>
+            <li>📱 响应式设计</li>
+            <li>🎨 现代化界面</li>
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

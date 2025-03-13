@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}用户注册{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <h2>创建账户</h2>
+        <p class="text-muted">立即加入我们</p>
+    </div>
+    
+    <form method="POST" id="registerForm">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.username.label(class="form-label") }}
+            {{ form.username(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control", id="password") }}
+        </div>
+        <div class="mb-3">
+            {{ form.confirm_password.label(class="form-label") }}
+            {{ form.confirm_password(class="form-control") }}
+        </div>
+        <input type="hidden" id="pk_sig" name="pk_sig">
+        <input type="hidden" id="secret_key" name="secret_key">
+        <input type="hidden" id="sk_enc" name="sk_enc">
+        <input type="hidden" id="pk_enc" name="pk_enc">
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">注册</button>
+        </div>
+        <div class="mt-3 text-center">
+            <span class="text-muted">已有账号？</span>
+            <a href="{{ url_for('login') }}" class="text-decoration-none">立即登录</a>
+        </div>
+    </form>
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.4/elliptic.min.js"></script>
+<script>
+const ec = new elliptic.ec('secp256k1');
+
+async function deriveR(k, pw) {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(k);
+    const messageData = encoder.encode(pw);
+
+    const cryptoKey = await window.crypto.subtle.importKey(
+        "raw",
+        keyData,
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+    );
+
+    const signature = await window.crypto.subtle.sign(
+        "HMAC",
+        cryptoKey,
+        messageData
+    );
+
+    return new Uint8Array(signature);
+}
+
+function toValidPrivateKey(rHex) {
+    try {
+        const key = ec.keyFromPrivate(rHex, 'hex');
+        const bn = key.getPrivate();
+        const n = ec.curve.n;
+        return bn.toString(16).padStart(64, '0');
+    } catch (e) {
+        console.error('Invalid private key:', e);
+        throw new Error('私钥生成失败');
+    }
+}
+
+async function generateKeyPair(k, pw) {
+    const r = await deriveR(k, pw);
+    const rHex = Array.from(r).map(b => b.toString(16).padStart(2, '0')).join('');
+    const privKey = toValidPrivateKey(rHex);
+    const keyPair = ec.keyFromPrivate(privKey, 'hex');
+    return {
+        sk_sig: privKey,
+        pk_sig: keyPair.getPublic('hex')
+    };
+}
+
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // 生成随机密钥k
+    const kArray = new Uint8Array(32);
+    window.crypto.getRandomValues(kArray);
+    const k = Array.from(kArray, b => b.toString(16).padStart(2, '0')).join('');
+    document.getElementById('secret_key').value = k;
+
+    const pw = document.getElementById('password').value;
+
+    try {
+        // 生成签名密钥对
+        const { sk_sig, pk_sig } = await generateKeyPair(k, pw);
+
+        // 生成加密密钥对（随机生成）
+        const encKeyPair = ec.genKeyPair();
+        const sk_enc = encKeyPair.getPrivate('hex');
+        const pk_enc = encKeyPair.getPublic('hex');
+
+        // 显示密钥给用户
+        const infoMessage = [
+            "请妥善保存以下密钥（建议截图保存）：",
+            `🔑 加密密钥 k: ${k}`,
+            `🔐 签名私钥 sk_sig: ${sk_sig}`,
+            `🔑 加密公钥 pk_enc: ${pk_enc}`,  // 显示加密公钥
+            "\n点击确定继续注册"
+        ].join('\n\n');
+
+        const saveConfirmed = confirm(infoMessage);
+        if (!saveConfirmed) return;
+
+        // 设置密钥到隐藏字段
+        document.getElementById('pk_sig').value = pk_sig;
+        document.getElementById('sk_enc').value = sk_enc;
+        document.getElementById('pk_enc').value = pk_enc;
+
+        // 提交表单
+        e.target.submit();
+    } catch (error) {
+        console.error('注册失败:', error);
+        alert('注册过程中发生错误，请检查控制台');
+    }
+});
+</script>
+{% endblock %}
