@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}用户注册{% endblock %}
-
+<link rel="stylesheet" type="text/css" href="style.css">
 {% block content %}
 <div class="auth-card">
     <div class="auth-header">
@@ -37,11 +37,110 @@
     </form>
 </div>
 
+<!-- 密钥展示模态框 -->
+<div id="keyModal" class="modal">
+    <div class="modal-content">
+        <h3 class="modal-title">🔒 重要！请保存您的密钥</h3>
+        <div class="key-container">
+            <div class="key-item">
+                <div class="key-header">
+                    <span>加密密钥 k</span>
+                    <button class="copy-btn" data-key="k">
+                        <i class="far fa-copy"></i>
+                        复制
+                    </button>
+                </div>
+                <code id="displayK" class="key-value"></code>
+            </div>
+
+            <div class="key-item">
+                <div class="key-header">
+                    <span>签名私钥 sk_sig</span>
+                    <button class="copy-btn" data-key="sk_sig">
+                        <i class="far fa-copy"></i>
+                        复制
+                    </button>
+                </div>
+                <code id="displaySkSig" class="key-value"></code>
+            </div>
+
+            <div class="key-item">
+                <div class="key-header">
+                    <span>加密公钥 pk_enc</span>
+                    <button class="copy-btn" data-key="pk_enc">
+                        <i class="far fa-copy"></i>
+                        复制
+                    </button>
+                </div>
+                <code id="displayPkEnc" class="key-value"></code>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="confirmBtn" class="btn btn-success">我已保存密钥</button>
+            <button id="cancelBtn" class="btn btn-secondary">取消</button>
+        </div>
+    </div>
+</div>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.4/elliptic.min.js"></script>
 <script>
 const ec = new elliptic.ec('secp256k1');
+let generatedKeys = {};
+
+// 复制功能
+document.addEventListener('click', async (e) => {
+    if (e.target.closest('.copy-btn')) {
+        const btn = e.target.closest('.copy-btn');
+        const keyType = btn.dataset.key;
+        const value = generatedKeys[keyType];
+
+        try {
+            btn.innerHTML = `<div class="loading"></div>`;
+            await navigator.clipboard.writeText(value);
+            btn.classList.add('copied');
+            btn.innerHTML = `<i class="far fa-check"></i> 已复制`;
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = `<i class="far fa-copy"></i> 复制`;
+            }, 2000);
+        } catch (err) {
+            console.error('复制失败:', err);
+            btn.innerHTML = `<i class="far fa-times"></i> 复制失败`;
+            setTimeout(() => {
+                btn.innerHTML = `<i class="far fa-copy"></i> 复制`;
+            }, 2000);
+        }
+    }
+});
+
+// 密钥生成逻辑
+async function generateKeys() {
+    const kArray = new Uint8Array(32);
+    window.crypto.getRandomValues(kArray);
+    const k = Array.from(kArray, b => b.toString(16).padStart(2, '0')).join('');
+    const pw = document.getElementById('password').value;
+
+    try {
+        // 生成签名密钥
+        const { sk_sig, pk_sig } = await (async () => {
+            const r = await deriveR(k, pw);
+            const rHex = Array.from(r).map(b => b.toString(16).padStart(2, '0')).join('');
+            const privKey = toValidPrivateKey(rHex);
+            const keyPair = ec.keyFromPrivate(privKey, 'hex');
+            return { sk_sig: privKey, pk_sig: keyPair.getPublic('hex') };
+        })();
+
+        // 生成加密密钥
+        const encKeyPair = ec.genKeyPair();
+        const pk_enc = encKeyPair.getPublic('hex');
+
+        return { k, sk_sig, pk_sig, pk_enc };
+    } catch (error) {
+        console.error('密钥生成失败:', error);
+        throw error;
+    }
+}
 
 async function deriveR(k, pw) {
     const encoder = new TextEncoder();
@@ -66,71 +165,60 @@ async function deriveR(k, pw) {
 }
 
 function toValidPrivateKey(rHex) {
-    try {
-        const key = ec.keyFromPrivate(rHex, 'hex');
-        const bn = key.getPrivate();
-        const n = ec.curve.n;
-        return bn.toString(16).padStart(64, '0');
-    } catch (e) {
-        console.error('Invalid private key:', e);
-        throw new Error('私钥生成失败');
-    }
+    const key = ec.keyFromPrivate(rHex, 'hex');
+    const bn = key.getPrivate();
+    const n = ec.curve.n;
+    return bn.toString(16).padStart(64, '0');
 }
 
-async function generateKeyPair(k, pw) {
-    const r = await deriveR(k, pw);
-    const rHex = Array.from(r).map(b => b.toString(16).padStart(2, '0')).join('');
-    const privKey = toValidPrivateKey(rHex);
-    const keyPair = ec.keyFromPrivate(privKey, 'hex');
-    return {
-        sk_sig: privKey,
-        pk_sig: keyPair.getPublic('hex')
-    };
-}
-
+// 表单提交处理
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    // 生成随机密钥k
-    const kArray = new Uint8Array(32);
-    window.crypto.getRandomValues(kArray);
-    const k = Array.from(kArray, b => b.toString(16).padStart(2, '0')).join('');
-    document.getElementById('secret_key').value = k;
-
-    const pw = document.getElementById('password').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
 
     try {
-        // 生成签名密钥对
-        const { sk_sig, pk_sig } = await generateKeyPair(k, pw);
+        submitBtn.innerHTML = `<div class="loading"></div> 正在生成密钥...`;
+        const keys = await generateKeys();
 
-        // 生成加密密钥对（随机生成）
-        const encKeyPair = ec.genKeyPair();
-        const sk_enc = encKeyPair.getPrivate('hex');
-        const pk_enc = encKeyPair.getPublic('hex');
+        generatedKeys = {
+            k: keys.k,
+            sk_sig: keys.sk_sig,
+            pk_enc: keys.pk_enc
+        };
 
-        // 显示密钥给用户
-        const infoMessage = [
-            "请妥善保存以下密钥（建议截图保存）：",
-            `🔑 加密密钥 k: ${k}`,
-            `🔐 签名私钥 sk_sig: ${sk_sig}`,
-            `🔑 加密公钥 pk_enc: ${pk_enc}`,  // 显示加密公钥
-            "\n点击确定继续注册"
-        ].join('\n\n');
+        // 更新显示
+        document.getElementById('displayK').textContent = keys.k;
+        document.getElementById('displaySkSig').textContent = keys.sk_sig;
+        document.getElementById('displayPkEnc').textContent = keys.pk_enc;
+        document.getElementById('keyModal').style.display = 'flex';
 
-        const saveConfirmed = confirm(infoMessage);
-        if (!saveConfirmed) return;
+        // 设置隐藏字段
+        document.getElementById('pk_sig').value = keys.pk_sig;
+        document.getElementById('secret_key').value = keys.k;
+        document.getElementById('sk_enc').value = keys.sk_enc;
+        document.getElementById('pk_enc').value = keys.pk_enc;
 
-        // 设置密钥到隐藏字段
-        document.getElementById('pk_sig').value = pk_sig;
-        document.getElementById('sk_enc').value = sk_enc;
-        document.getElementById('pk_enc').value = pk_enc;
-
-        // 提交表单
-        e.target.submit();
     } catch (error) {
-        console.error('注册失败:', error);
-        alert('注册过程中发生错误，请检查控制台');
+        alert('密钥生成失败，请重试');
+        console.error(error);
+    } finally {
+        submitBtn.innerHTML = `注册`;
     }
 });
+
+// 模态框控制
+document.getElementById('confirmBtn').addEventListener('click', () => {
+    document.getElementById('keyModal').style.display = 'none';
+    document.getElementById('registerForm').submit();
+});
+
+document.getElementById('cancelBtn').addEventListener('click', () => {
+    document.getElementById('keyModal').style.display = 'none';
+    generatedKeys = {};
+});
 </script>
+
+<!-- Font Awesome 图标 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 {% endblock %}
