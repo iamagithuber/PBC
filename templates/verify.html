@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}验证挑战 - MyApp{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <h2>挑战验证</h2>
+        <p class="text-muted">请输入安全凭证完成验证</p>
+    </div>
+
+    <form id="verifyForm">
+        <!-- 用户名字段-->
+        <div class="mb-3">
+            <label for="username" class="form-label">用户名</label>
+            <input
+                type="text"
+                class="form-control"
+                id="username"
+                name="username"
+                required
+                autocomplete="username"
+                placeholder="请输入您的用户名"
+            >
+        </div>
+        <!-- 密码字段 -->
+        <div class="mb-3">
+            <label for="password" class="form-label">密码</label>
+            <input
+                type="password"
+                class="form-control"
+                id="password"
+                name="password"
+                required
+                autocomplete="current-password"
+            >
+        </div>
+
+        <!-- 加密密钥 -->
+        <div class="mb-3">
+            <label for="encrypt_key" class="form-label">加密密钥 (k)</label>
+            <textarea
+                class="form-control"
+                id="encrypt_key"
+                name="encrypt_key"
+                rows="2"
+                required
+                placeholder="Paste your encryption key here"
+            ></textarea>
+        </div>
+
+        <!-- 签名密钥 -->
+        <div class="mb-3">
+            <label for="sign_key" class="form-label">签名密钥 (sk_sig)</label>
+            <textarea
+                class="form-control"
+                id="sign_key"
+                name="sign_key"
+                rows="2"
+                required
+                placeholder="Paste your signing key here"
+            ></textarea>
+        </div>
+
+        <!-- 加密公钥 -->
+        <div class="mb-3">
+            <label for="public_key" class="form-label">加密公钥 (pk_enc)</label>
+            <textarea
+                class="form-control"
+                id="public_key"
+                name="public_key"
+                rows="2"
+                required
+                placeholder="Paste your public key here"
+            ></textarea>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+                验证凭证
+            </button>
+        </div>
+    </form>
+</div>
+
+<script src="/static/scripts/verify.js"></script>
+
+{% endblock %}
