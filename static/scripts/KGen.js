@@ -35,7 +35,7 @@ async function generateKeys() {
     const pw = document.getElementById('password').value;
 
     try {
-        // 生成签名密钥
+        // 生成签名密钥secp256k1
         const { sk_sig, pk_sig } = await (async () => {
             const r = await deriveR(k, pw);
             const rHex = Array.from(r).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -44,11 +44,19 @@ async function generateKeys() {
             return { sk_sig: privKey, pk_sig: keyPair.getPublic('hex') };
         })();
 
-        // 生成加密密钥
-        const encKeyPair = ec.genKeyPair();
-        const pk_enc = encKeyPair.getPublic('hex');
+        // tweetnacl-js
+        // 生成密钥对（Curve25519）
+        const keyPair = nacl.box.keyPair();
 
-        return { k, sk_sig, pk_sig, pk_enc };
+        // 导出公钥和私钥为 Base64
+        const publicKeyBase64 = btoa(String.fromCharCode(...keyPair.publicKey));
+        const privateKeyBase64 = btoa(String.fromCharCode(...keyPair.secretKey));
+
+        const pk_enc = publicKeyBase64;
+        const sk_enc = privateKeyBase64;
+
+
+        return { k, sk_sig, pk_sig, pk_enc, sk_enc };
     } catch (error) {
         console.error('密钥生成失败:', error);
         throw error;

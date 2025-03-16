@@ -11,6 +11,7 @@ import hmac
 import hashlib
 import time
 import os
+from ecies import decrypt
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -87,6 +88,7 @@ def login():
         challenge = generate_challenge()
         session['challenge'] = challenge
         user = User.query.filter_by(username=form.username.data).first()
+        # user需要转为json格式才能存储到session里
         if user:
             return jsonify({
                 'success': True,
@@ -107,13 +109,12 @@ def login():
 
 @app.route('/verify', methods=['GET', 'POST'])
 def verify():
-    form = verifyForm()
+    challenge = session.get('challenge')
+    data = request.get_json()
+    encrypted_data = data.get('encryptedData')
+    username = data.get('username')
+    #user = User.query.filter_by(username=form.username.data).first()
 
-    return render_template('verify.html')
-    username = request.get('username')
-    #
-    # stored_challenge = session.get('challenge')
-    #
     # # 检查挑战是否有效
     # if not stored_challenge:
     #     return jsonify({'success': False, 'error': '挑战无效或已过期'}), 400
