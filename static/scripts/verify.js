@@ -32,7 +32,7 @@ document.getElementById('verifyForm').addEventListener('submit', async (e) => {
       try {
         // 从 sessionStorage 获取挑战值
         const challenge = sessionStorage.getItem('challenge');
-        console.log(challenge);
+
         if (!challenge) {
             alert('错误：验证会话已过期，请重新登录');
             window.location.href = '/login';
@@ -48,15 +48,18 @@ document.getElementById('verifyForm').addEventListener('submit', async (e) => {
 
 
         // 拼接签名消息
-        const rawData = `${username}:${challenge}`;
+        const rawData = `${username}${challenge}`;
 
         // 使用ECDSA签名（secp256k1）
-        //const msgHash = elliptic.utils.sha256(rawData); // 使用SHA-256哈希，secp256k1要求对哈希进行签名
+        const msgHash = CryptoJS.SHA256(rawData).toString(CryptoJS.enc.Hex);
+        const msgHashBytes = elliptic.utils.toArray(msgHash, 'hex'); // 转换为字节数组
         // 生成签名（自动规范化+DER编码）
         const keyPair = ec.keyFromPrivate(sign_key, 'hex');
-        const signature = keyPair.sign(rawData, { canonical: true });
-        const derSign = signature.toDER('hex'); // 最终需要的DER格式
+        const signature = keyPair.sign(msgHashBytes, { canonical: true });
 
+        const derSign = signature.toDER('hex'); // 最终需要的DER格式
+        console.log("signature:",signature);
+        console.log("derSign:",derSign);
 
         // 使用公钥加密签名结果
         const pk_enc = base64ToUint8Array(public_key);
@@ -66,16 +69,19 @@ document.getElementById('verifyForm').addEventListener('submit', async (e) => {
 
         const encrypt_sigma = sealedBox.seal(derSign_8Array,pk_enc);
         const encrypt_sigma_base64 = uint8ArrayToBase64(encrypt_sigma);
-
-
-        const response = await fetch('/verify', {
+        console.log("encrypt_sigma:",encrypt_sigma);
+        console.log("encryptedData:",encrypt_sigma_base64);
+        console.log("rawData:",rawData)
+        console.log("signature:",signature)
+        const response = await fetch('/verify1', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                encryptedData: encrypt_sigma,
+                encryptedData: encrypt_sigma_base64,
                 username: username
             })
         });
+
         console.log("[Debug] 事件已触发");
         // 处理响应
         const result = await response.json();

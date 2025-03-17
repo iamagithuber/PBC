@@ -11,7 +11,13 @@ import hmac
 import hashlib
 import time
 import os
-from ecies import decrypt
+import base64
+from nacl.public import PrivateKey, SealedBox
+import binascii
+from cryptography.hazmat.primitives import hashes
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.backends import default_backend
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -89,6 +95,7 @@ def login():
         session['challenge'] = challenge
         user = User.query.filter_by(username=form.username.data).first()
         # user需要转为json格式才能存储到session里
+        # 这里等待修改，后端控制跳转，不能再让前端控制
         if user:
             return jsonify({
                 'success': True,
@@ -109,20 +116,10 @@ def login():
 
 @app.route('/verify', methods=['GET', 'POST'])
 def verify():
-    challenge = session.get('challenge')
-    data = request.get_json()
-    encrypted_data = data.get('encryptedData')
-    username = data.get('username')
-    #user = User.query.filter_by(username=form.username.data).first()
 
-    # # 检查挑战是否有效
-    # if not stored_challenge:
-    #     return jsonify({'success': False, 'error': '挑战无效或已过期'}), 400
-    # if data.get('challenge') != stored_challenge:
-    #     return jsonify({'success': False, 'error': '挑战不匹配'}), 400
-
-    # 示例验证逻辑（需替换为实际加密验证）
-
+    if request.method == 'GET':
+        # 显示验证页面（比如生物识别验证页面）
+        return render_template('verify.html')
 
     # 清除已使用的挑战
     session.pop('challenge', None)
@@ -130,6 +127,72 @@ def verify():
     if request.method == 'GET':
         # 显示验证页面（比如生物识别验证页面）
         return render_template('verify.html')
+
+@app.route('/verify1', methods=['GET', 'POST'])
+def verify1():
+    challenge = session.get('challenge')
+    data = request.get_json()
+    encrypted_data = data.get('encryptedData')
+    username = data.get('username')
+    user = User.query.filter_by(username=username).first()
+    if user:
+        pk_sig = user.pk_sig
+        sk_enc = user.sk_enc
+        print("user has been found")
+        encrypted_data_bytes = base64.b64decode(encrypted_data)
+        print("encrypted_data:", encrypted_data)
+        print("encrypted_data_bytes:",encrypted_data_bytes)
+        # 解密
+        sk_enc_bytes = base64.b64decode(sk_enc)
+        private_key = PrivateKey(sk_enc_bytes)
+        sealed_box = SealedBox(private_key)
+        decrypted_sigma = sealed_box.decrypt(encrypted_data_bytes)
+        der_sign_hex = decrypted_sigma.hex()
+        print("decrypted_sigma:",decrypted_sigma)
+        print("der_sign_hex:",der_sign_hex) # equal to derSign in verify.js
+        # 将hex转为字节
+        public_key_bytes = binascii.unhexlify(pk_sig)
+        # 从字节加载公钥
+        public_key = ec.EllipticCurvePublicKey.from_encoded_point(
+            ec.SECP256K1(),
+            public_key_bytes
+        )
+        # 转换DER签名到字节
+        der_signature = bytes.fromhex(der_sign_hex)
+        # 拼接验证消息->bytes格式
+        raw_data = f"{username}{challenge}".encode("utf-8")
+
+        # 生成数据哈希（SHA-256）（加密时已经默认哈希过了）
+        # digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+        # digest.update(raw_data)  # 编码必须一致
+        # data_hash = digest.finalize()
+        print("raw_data:",raw_data)
+        print("der_signature:",der_signature)
+        if raw_data == der_signature:
+            print("yes!")
+        else:
+            print("no!")
+
+        try:
+            # 验证签名
+            public_key.verify(
+                der_signature,
+                raw_data,
+                ec.ECDSA(hashes.SHA256())
+            )
+            session.pop('challenge', None)
+            session.pop('username', None)
+            return jsonify({'success': True})
+        except InvalidSignature:
+            return jsonify({"success": False, "error": "签名无效"}), 400
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+    else:
+        return jsonify({"success:": False, "error": "用户不存在"}), 400
+
+
+    # 清除已使用的挑战
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -159,7 +222,7 @@ def generate_challenge():
     # 生成时间戳和随机数
     timestamp = str(int(time.time()))
     nonce = os.urandom(16).hex()  # 生成16字节的随机数
-    data = f"{timestamp}:{nonce}"
+    data = f"{timestamp}{nonce}"
 
     # 使用HMAC-SHA256签名
     signature = hmac.new(
@@ -169,7 +232,7 @@ def generate_challenge():
     ).hexdigest()
 
     # 组合成挑战消息
-    challenge = f"{data}:{signature}"
+    challenge = f"{data}{signature}"
 
     # 存储到Session供后续验证
     session['challenge_data'] = {
