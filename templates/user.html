@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户个人中心</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f7fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--secondary-color);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background-color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .profile-section {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: border-color 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            cursor: pointer;
+            color: #666;
+        }
+
+        .preview-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .personal-center-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .personal-center-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 0.5rem;
+            }
+
+            .profile-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">个人中心</div>
+        <a href="#" class="personal-center-link" onclick="showPersonalCenter()">
+            <span>个人资料</span>
+        </a>
+    </nav>
+
+    <div class="container">
+        <div class="profile-section">
+            <div class="upload-area">
+                <input type="file" id="avatar" accept="image/*" onchange="previewImage(event)">
+                <label for="avatar" class="upload-label">
+                    <p>点击上传头像（支持JPG/PNG格式）</p>
+                </label>
+                <img id="preview" class="preview-image" alt="头像预览">
+            </div>
+
+            <div class="form-group">
+                <input type="text" placeholder="请输入用户名" id="username">
+            </div>
+
+            <div class="form-group">
+                <textarea rows="4" placeholder="个人简介（最多200字）" id="bio"></textarea>
+            </div>
+
+            <button class="btn" onclick="submitForm()">保存修改</button>
+        </div>
+    </div>
+
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            const preview = document.getElementById('preview');
+
+            reader.onload = function() {
+                preview.style.display = 'block';
+                preview.src = reader.result;
+            };
+
+            if (event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
+
+        function submitForm() {
+            const username = document.getElementById('username').value;
+            const bio = document.getElementById('bio').value;
+            const avatar = document.getElementById('avatar').files[0];
+
+            // 这里可以添加实际的表单提交逻辑
+            console.log('提交信息:', { username, bio, avatar });
+            alert('信息已保存！');
+        }
+
+        function showPersonalCenter() {
+            // 这里可以添加跳转或显示个人中心页面的逻辑
+            alert('正在跳转至个人中心...');
+        }
+    </script>
+</body>
+</html>

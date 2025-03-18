@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash
 from flask_migrate import Migrate
 from flask import request
 import hmac
@@ -17,9 +17,11 @@ import binascii
 from cryptography.hazmat.primitives import hashes
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.backends import default_backend
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True)  # 允许跨域且携带 Cookie
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 Bootstrap(app)
@@ -116,17 +118,11 @@ def login():
 
 @app.route('/verify', methods=['GET', 'POST'])
 def verify():
-
     if request.method == 'GET':
         # 显示验证页面（比如生物识别验证页面）
         return render_template('verify.html')
 
-    # 清除已使用的挑战
-    session.pop('challenge', None)
 
-    if request.method == 'GET':
-        # 显示验证页面（比如生物识别验证页面）
-        return render_template('verify.html')
 
 @app.route('/verify1', methods=['GET', 'POST'])
 def verify1():
@@ -148,7 +144,6 @@ def verify1():
         sealed_box = SealedBox(private_key)
         decrypted_sigma = sealed_box.decrypt(encrypted_data_bytes)
         der_sign_hex = decrypted_sigma.hex()
-        print("decrypted_sigma:",decrypted_sigma)
         print("der_sign_hex:",der_sign_hex) # equal to derSign in verify.js
         # 将hex转为字节
         public_key_bytes = binascii.unhexlify(pk_sig)
@@ -161,17 +156,6 @@ def verify1():
         der_signature = bytes.fromhex(der_sign_hex)
         # 拼接验证消息->bytes格式
         raw_data = f"{username}{challenge}".encode("utf-8")
-
-        # 生成数据哈希（SHA-256）（加密时已经默认哈希过了）
-        # digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
-        # digest.update(raw_data)  # 编码必须一致
-        # data_hash = digest.finalize()
-        print("raw_data:",raw_data)
-        print("der_signature:",der_signature)
-        if raw_data == der_signature:
-            print("yes!")
-        else:
-            print("no!")
 
         try:
             # 验证签名
@@ -191,7 +175,9 @@ def verify1():
         return jsonify({"success:": False, "error": "用户不存在"}), 400
 
 
-    # 清除已使用的挑战
+@app.route('/user', methods=['GET', 'POST'])
+def user ():
+    return render_template('user.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -275,3 +261,5 @@ def verify_challenge(client_challenge):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
