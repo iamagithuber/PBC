@@ -32,7 +32,7 @@ migrate = Migrate(app, db)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)  # 密码哈希
+
     pk_sig = db.Column(db.String(130), nullable=False)    # 签名公钥
     sk_enc = db.Column(db.String(64), nullable=False)     # 加密私钥db
     pk_enc = db.Column(db.String(130), nullable=False)    # 加密公钥
@@ -42,7 +42,6 @@ class User(db.Model):
 # 登录表单
 class LoginForm(FlaskForm):
     username = StringField('用户名', validators=[DataRequired()])
-    # password = PasswordField('密码', validators=[DataRequired()])
     submit = SubmitField('登录')
 
 # 注册表单
@@ -98,7 +97,6 @@ def login():
         session['challenge'] = challenge
         user = User.query.filter_by(username=form.username.data).first()
         # user需要转为json格式才能存储到session里
-        # 这里等待修改，后端控制跳转，不能再让前端控制
         if user:
             return jsonify({
                 'success': True,
@@ -108,12 +106,6 @@ def login():
         else:
             return jsonify({'success': False}), 401
 
-        # if user and check_password_hash(user.password, form.password.data):
-        #     session['user'] = user.username
-        #     flash('登录成功！', 'success')
-        #     return redirect(url_for('home'))
-        # else:
-        #     flash('用户名或密码错误', 'danger')
     return render_template('login.html', form=form)
 
 
@@ -198,14 +190,10 @@ def check_username():
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
-        username = form.username.data
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            return jsonify({'error':'用户名已存在'}),409
-        hashed_password = generate_password_hash(form.password.data)
+
         new_user = User(
             username=form.username.data,
-            password=hashed_password,
+
             pk_sig=form.pk_sig.data,  # 签名公钥
             sk_enc=form.sk_enc.data,  # 加密私钥
             pk_enc=form.pk_enc.data,  # 加密公钥
