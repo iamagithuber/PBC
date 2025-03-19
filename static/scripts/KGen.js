@@ -92,12 +92,51 @@ function toValidPrivateKey(rHex) {
     return bn.toString(16).padStart(64, '0');
 }
 
+async function checkUsername(username) {
+    try {
+        const response = await fetch('/check_username', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            alert('用户名已被占用，请重新输入');
+            throw new Error(errorData.error || '用户名检查失败');
+        }
+        return true;
+    } catch (error) {
+        throw error;
+    }
+}
 // 表单提交处理
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    console.log('00');
     e.preventDefault();
     const submitBtn = e.target.querySelector('button[type="submit"]');
 
     try {
+//        const response = await fetch('/register', {
+//          method: 'POST',
+//          headers: { 'Content-Type': 'application/json' },
+//          body: JSON.stringify({ username }),
+//        });
+//        console.log('0')
+//
+//        if (!response.ok) {
+//          const errorData = await response.json();
+//          console.log('1')
+//          // 处理409 Conflict错误
+//          if (response.status === 409) {
+//             alert(`注册失败: ${errorData.error}`);
+//          }
+//          return;
+//          console.log('2')
+////          window.location.href = '/register'
+//        }
+        const username = document.getElementById('username').value;
+        await checkUsername(username);
         submitBtn.innerHTML = `<div class="loading"></div> 正在生成密钥...`;
         const keys = await generateKeys();
 
@@ -118,6 +157,8 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         document.getElementById('secret_key').value = keys.k;
         document.getElementById('sk_enc').value = keys.sk_enc;
         document.getElementById('pk_enc').value = keys.pk_enc;
+
+        //window.location.href = response.redirect;
 
     } catch (error) {
         alert('密钥生成失败，请重试');

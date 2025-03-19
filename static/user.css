@@ -1,0 +1,130 @@
+:root {
+    --primary-color: #4a90e2;
+    --secondary-color: #f5f7fa;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+    background-color: var(--secondary-color);
+    line-height: 1.6;
+}
+
+.navbar {
+    background-color: white;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.profile-section {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    transition: border-color 0.3s;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+}
+
+.upload-area input[type="file"] {
+    display: none;
+}
+
+.upload-label {
+    cursor: pointer;
+    color: #666;
+}
+
+.preview-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 1rem 0;
+    display: none;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+input[type="text"],
+textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.personal-center-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.personal-center-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 0.5rem;
+    }
+
+    .profile-section {
+        padding: 1rem;
+    }
+}

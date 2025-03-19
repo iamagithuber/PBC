@@ -20,9 +20,10 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from flask_cors import CORS
 
 
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True)  # 允许跨域且携带 Cookie
-app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SECRET_KEY'] = 'zhengdongyuan'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 Bootstrap(app)
 db = SQLAlchemy(app)
@@ -165,7 +166,7 @@ def verify1():
                 ec.ECDSA(hashes.SHA256())
             )
             session.pop('challenge', None)
-            session.pop('username', None)
+
             return jsonify({'success': True})
         except InvalidSignature:
             return jsonify({"success": False, "error": "签名无效"}), 400
@@ -177,13 +178,30 @@ def verify1():
 
 @app.route('/user', methods=['GET', 'POST'])
 def user ():
+
     return render_template('user.html')
 
+@app.route('/check_username', methods=['POST'])
+def check_username():
+    data = request.get_json()
+    username = data.get('username')
+
+    # if not username or len(username) < 4:
+    #     return jsonify({"error": "用户名至少需要4个字符"}), 409
+
+    if User.query.filter_by(username=username).first():
+        return jsonify({"error": "用户名已被占用"}), 409
+
+    return jsonify({"message": "用户名可用"}), 200
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
+        username = form.username.data
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            return jsonify({'error':'用户名已存在'}),409
         hashed_password = generate_password_hash(form.password.data)
         new_user = User(
             username=form.username.data,
@@ -195,8 +213,11 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         flash('注册成功，请登录！', 'success')
+        # 如果是前后端分离架构，应当返回json文件，因为AJAX是异步请求，浏览器不会自动跟踪重定向
         return redirect(url_for('login'))
+
     return render_template('register.html', form=form)
+
 
 @app.route('/logout')
 def logout():

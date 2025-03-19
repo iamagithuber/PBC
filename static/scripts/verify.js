@@ -88,7 +88,7 @@ document.getElementById('verifyForm').addEventListener('submit', async (e) => {
 
         if (result.success) {
             sessionStorage.removeItem('challenge');
-
+            sessionStorage.setItem('username', username);
             window.location.href = '/user';
         } else {
             showAlert(`验证失败: ${result.error}`, 'danger');

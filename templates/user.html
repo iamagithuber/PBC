@@ -29,12 +29,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        .logo {
-            font-size: 1.5rem;
+        /* 用户名显示样式 */
+        #usernameDisplay {
             color: var(--primary-color);
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 1.2rem;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .container {
@@ -85,7 +93,6 @@
             margin-bottom: 1.5rem;
         }
 
-        input[type="text"],
         textarea {
             width: 100%;
             padding: 0.8rem;
@@ -95,7 +102,6 @@
             transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus,
         textarea:focus {
             outline: none;
             border-color: var(--primary-color);
@@ -115,20 +121,22 @@
             opacity: 0.9;
         }
 
-        .personal-center-link {
+        .logout-btn {
+            background: none;
+            border: 1px solid var(--primary-color);
             color: var(--primary-color);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-
-        .personal-center-link:hover {
-            text-decoration: underline;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
         }
 
         @media (max-width: 768px) {
             .container {
                 padding: 0 0.5rem;
+            }
+
+            #usernameDisplay {
+                max-width: 150px;
             }
 
             .profile-section {
@@ -139,10 +147,8 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">个人中心</div>
-        <a href="#" class="personal-center-link" onclick="showPersonalCenter()">
-            <span>个人资料</span>
-        </a>
+        <div id="usernameDisplay"></div>
+        <button class="logout-btn" onclick="logout()">退出登录</button>
     </nav>
 
     <div class="container">
@@ -156,46 +162,13 @@
             </div>
 
             <div class="form-group">
-                <input type="text" placeholder="请输入用户名" id="username">
-            </div>
-
-            <div class="form-group">
                 <textarea rows="4" placeholder="个人简介（最多200字）" id="bio"></textarea>
             </div>
 
             <button class="btn" onclick="submitForm()">保存修改</button>
         </div>
     </div>
+    <script src="/static/scripts/user.js"></script>
 
-    <script>
-        function previewImage(event) {
-            const reader = new FileReader();
-            const preview = document.getElementById('preview');
-
-            reader.onload = function() {
-                preview.style.display = 'block';
-                preview.src = reader.result;
-            };
-
-            if (event.target.files[0]) {
-                reader.readAsDataURL(event.target.files[0]);
-            }
-        }
-
-        function submitForm() {
-            const username = document.getElementById('username').value;
-            const bio = document.getElementById('bio').value;
-            const avatar = document.getElementById('avatar').files[0];
-
-            // 这里可以添加实际的表单提交逻辑
-            console.log('提交信息:', { username, bio, avatar });
-            alert('信息已保存！');
-        }
-
-        function showPersonalCenter() {
-            // 这里可以添加跳转或显示个人中心页面的逻辑
-            alert('正在跳转至个人中心...');
-        }
-    </script>
 </body>
 </html>
