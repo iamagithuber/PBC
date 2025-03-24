@@ -75,7 +75,7 @@ class verifyForm(FlaskForm):
     ])
 
     encrypt_key = StringField('encrypt_key', validators=[DataRequired()])
-    sign_key = StringField('sign_key', validators=[DataRequired()])
+    # sign_key = StringField('sign_key', validators=[DataRequired()])
     public_key = StringField('public_key', validators=[DataRequired()])
 
 

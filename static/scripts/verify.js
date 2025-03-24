@@ -26,6 +26,35 @@ function hexToBase64(hexString) {
   const binaryString = String.fromCharCode(...byteArray);
   return btoa(binaryString);
 }
+// 工具函数：driveR
+async function deriveR(k, pw) {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(k);
+    const messageData = encoder.encode(pw);
+
+    const cryptoKey = await window.crypto.subtle.importKey(
+        "raw",
+        keyData,
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+    );
+
+    const signature = await window.crypto.subtle.sign(
+        "HMAC",
+        cryptoKey,
+        messageData
+    );
+
+    return new Uint8Array(signature);
+}
+// 工具函数：toValidPrivateKey
+function toValidPrivateKey(rHex) {
+    const key = ec.keyFromPrivate(rHex, 'hex');
+    const bn = key.getPrivate();
+    const n = ec.curve.n;
+    return bn.toString(16).padStart(64, '0');
+}
 
 document.getElementById('verifyForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -43,9 +72,18 @@ document.getElementById('verifyForm').addEventListener('submit', async (e) => {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         const encrypt_key = document.getElementById('encrypt_key').value;
-        const sign_key = document.getElementById('sign_key').value;
+//        const sign_key = document.getElementById('sign_key').value;
         const public_key = document.getElementById('public_key').value;
 
+        // 生成签名密钥secp256k1
+        const { sk_sig, pk_sig } = await (async () => {
+            const r = await deriveR(encrypt_key, password);
+            const rHex = Array.from(r).map(b => b.toString(16).padStart(2, '0')).join('');
+            const privKey = toValidPrivateKey(rHex);
+            const keyPair = ec.keyFromPrivate(privKey, 'hex');
+            return { sk_sig: privKey, pk_sig: keyPair.getPublic('hex') };
+        })();
+        const sign_key = sk_sig;
 
         // 拼接签名消息
         const rawData = `${username}${challenge}`;

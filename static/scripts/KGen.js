@@ -148,7 +148,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
 
         // 更新显示
         document.getElementById('displayK').textContent = keys.k;
-        document.getElementById('displaySkSig').textContent = keys.sk_sig;
+//        document.getElementById('displaySkSig').textContent = keys.sk_sig;
         document.getElementById('displayPkEnc').textContent = keys.pk_enc;
         document.getElementById('keyModal').style.display = 'flex';
 
