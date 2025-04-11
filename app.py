@@ -14,7 +14,7 @@ import base64
 from nacl.public import PrivateKey, SealedBox
 import binascii
 from cryptography.hazmat.primitives import hashes
-from cryptography.exceptions import InvalidSignat
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import ec
 from flask_cors import CORS
 
