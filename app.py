@@ -4,7 +4,6 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
 from flask_migrate import Migrate
 from flask import request
 import hmac
@@ -15,7 +14,7 @@ import base64
 from nacl.public import PrivateKey, SealedBox
 import binascii
 from cryptography.hazmat.primitives import hashes
-from cryptography.exceptions import InvalidSignature
+from cryptography.exceptions import InvalidSignat
 from cryptography.hazmat.primitives.asymmetric import ec
 from flask_cors import CORS
 
@@ -32,10 +31,9 @@ migrate = Migrate(app, db)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-
-    pk_sig = db.Column(db.String(130), nullable=False)    # 签名公钥
-    sk_enc = db.Column(db.String(64), nullable=False)     # 加密私钥db
-    pk_enc = db.Column(db.String(130), nullable=False)    # 加密公钥
+    pk_sig = db.Column(db.String(130), nullable=False)
+    sk_enc = db.Column(db.String(64), nullable=False)
+    pk_enc = db.Column(db.String(130), nullable=False)
 
 
 
@@ -217,7 +215,7 @@ def generate_challenge():
     # 生成时间戳和随机数
     timestamp = str(int(time.time()))
     nonce = os.urandom(16).hex()  # 生成16字节的随机数
-    data = f"{timestamp}{nonce}"
+    data = f"{timestamp}:{nonce}"
 
     # 使用HMAC-SHA256签名
     signature = hmac.new(
@@ -227,7 +225,7 @@ def generate_challenge():
     ).hexdigest()
 
     # 组合成挑战消息
-    challenge = f"{data}{signature}"
+    challenge = f"{data}:{signature}"
 
     # 存储到Session供后续验证
     session['challenge_data'] = {

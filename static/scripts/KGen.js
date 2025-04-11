@@ -35,15 +35,18 @@ async function generateKeys() {
     const pw = document.getElementById('password').value;
 
     try {
+        //KGen_S
         // 生成签名密钥secp256k1
         const { sk_sig, pk_sig } = await (async () => {
             const r = await deriveR(k, pw);
             const rHex = Array.from(r).map(b => b.toString(16).padStart(2, '0')).join('');
             const privKey = toValidPrivateKey(rHex);
+            console.log("privKey=", privKey.toString("hex"));
             const keyPair = ec.keyFromPrivate(privKey, 'hex');
             return { sk_sig: privKey, pk_sig: keyPair.getPublic('hex') };
         })();
 
+        //KGen_E
         // tweetnacl-js
         // 生成密钥对（Curve25519）
         const keyPair = nacl.box.keyPair();
@@ -62,7 +65,7 @@ async function generateKeys() {
         throw error;
     }
 }
-
+// F(k,pw)
 async function deriveR(k, pw) {
     const encoder = new TextEncoder();
     const keyData = encoder.encode(k);
@@ -117,24 +120,6 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     const submitBtn = e.target.querySelector('button[type="submit"]');
 
     try {
-//        const response = await fetch('/register', {
-//          method: 'POST',
-//          headers: { 'Content-Type': 'application/json' },
-//          body: JSON.stringify({ username }),
-//        });
-//        console.log('0')
-//
-//        if (!response.ok) {
-//          const errorData = await response.json();
-//          console.log('1')
-//          // 处理409 Conflict错误
-//          if (response.status === 409) {
-//             alert(`注册失败: ${errorData.error}`);
-//          }
-//          return;
-//          console.log('2')
-////          window.location.href = '/register'
-//        }
         const username = document.getElementById('username').value;
         await checkUsername(username);
         submitBtn.innerHTML = `<div class="loading"></div> 正在生成密钥...`;

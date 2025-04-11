@@ -1,0 +1,15 @@
+# 忽略依赖目录
+node_modules/
+venv/
+
+# 忽略 IDE 配置文件
+.idea/
+
+# 忽略 Python 缓存和测试目录
+__pycache__/
+.pytest_cache/
+
+# 忽略本地数据库和日志
+instance/
+*.db
+*.log

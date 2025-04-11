@@ -28,7 +28,6 @@ function submitForm() {
     const bio = document.getElementById('bio').value;
     const avatar = document.getElementById('avatar').files[0];
 
-    // 这里可以添加实际的表单提交逻辑
     console.log('提交信息:', { bio, avatar });
     alert('信息已保存！');
 }
