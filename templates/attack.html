@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}
+PBC 强不可伪造性攻击模拟
+{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <h2>🧪 模拟攻击者伪造认证令牌</h2>
+    </div>
+    <form onsubmit="event.preventDefault(); simulateAttack();">
+        <div class="mb-3">
+            <label for="username" class="form-label">用户名</label>
+            <input type="text" class="form-control" id="username" value="alice">
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">密码</label>
+            <input type="text" class="form-control" id="password" value="password123">
+        </div>
+        <div class="mb-3">
+            <label for="message" class="form-label">挑战消息</label>
+            <input type="text" class="form-control" id="message" value="testchallenge">
+        </div>
+        <button type="submit" class="btn btn-primary w-100">开始攻击</button>
+    </form>
+    <pre id="result" class="mt-4 bg-light p-3 rounded" style="white-space: pre-wrap;"></pre>
+</div>
+
+<script src="{{ url_for('static', filename='scripts/attack.js') }}"></script>
+{% endblock %}

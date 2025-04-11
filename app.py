@@ -211,6 +211,82 @@ def logout():
     return redirect(url_for('home'))
 
 
+
+@app.route('/attack')
+def attack_page():
+    return render_template('attack.html')
+
+@app.route('/get_user_info', methods=['POST'])
+def get_user_info():
+    data = request.get_json()
+    username = data.get('username')
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'success': False})
+    return jsonify({
+        'success': True,
+        'pk_sig': user.pk_sig,
+        'pk_enc': user.pk_enc,
+    })
+
+# 验证强不可伪造性
+@app.route('/verify_fake_token', methods=['POST'])
+def verify_fake_token():
+    data = request.get_json()
+    username = data.get('username')
+    challenge = data.get('challenge')
+    fake_token = data.get('fake_token')
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'success': False, 'error': '用户不存在'}), 400
+
+    try:
+        # 模拟从 token 中提取签名
+        encoded = fake_token.split(":")[-1]
+        fake_signature = base64.b64decode(encoded.encode())
+
+        # 加载用户签名公钥
+        pk_sig_bytes = binascii.unhexlify(user.pk_sig)
+        public_key = ec.EllipticCurvePublicKey.from_encoded_point(
+            ec.SECP256K1(),
+            pk_sig_bytes
+        )
+
+        # 构造消息进行验证
+        message = f"{username}{challenge}".encode("utf-8")
+
+        # 伪造的签名不会通过，除非攻击成功
+        public_key.verify(
+            fake_signature,
+            message,
+            ec.ECDSA(hashes.SHA256())
+        )
+
+        app.logger.warning(f"✅攻击成功：伪 token 验证通过！username={username}")
+        return jsonify({'success': True})
+    except Exception as e:
+        app.logger.info(f"⚠️攻击失败：token 验证失败 - {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.get_json()
+    username = data.get("username")
+    user = User.query.filter_by(username=username).first()
+
+    if user:
+        challenge = generate_challenge()
+        session['challenge'] = challenge
+        return jsonify({
+            'success': True,
+            'challenge': challenge
+        })
+    else:
+        return jsonify({'success': False, 'error': '用户不存在'}), 404
+
+
+
 def generate_challenge():
     # 生成时间戳和随机数
     timestamp = str(int(time.time()))
