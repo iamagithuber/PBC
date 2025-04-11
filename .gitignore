@@ -13,3 +13,5 @@ __pycache__/
 instance/
 *.db
 *.log
+
+rockyou.txt
