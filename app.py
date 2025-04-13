@@ -212,9 +212,9 @@ def logout():
 
 
 
-@app.route('/attack')
-def attack_page():
-    return render_template('attack.html')
+@app.route('/strong_attack')
+def strong_attack_page():
+    return render_template('strong_attack.html')
 
 @app.route('/get_user_info', methods=['POST'])
 def get_user_info():
@@ -269,6 +269,7 @@ def verify_fake_token():
         app.logger.info(f"⚠️攻击失败：token 验证失败 - {e}")
         return jsonify({'success': False, 'error': str(e)})
 
+# 模拟用户登录路由
 @app.route('/api/login', methods=['POST'])
 def api_login():
     data = request.get_json()
@@ -284,6 +285,12 @@ def api_login():
         })
     else:
         return jsonify({'success': False, 'error': '用户不存在'}), 404
+
+# 模拟在线不可伪造性
+@app.route('/online_attack')
+def oline_attack_page():
+    return render_template('online_attack.html')
+
 
 
 

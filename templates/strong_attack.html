@@ -7,7 +7,7 @@ PBC 强不可伪造性攻击模拟
 {% block content %}
 <div class="auth-card">
     <div class="auth-header">
-        <h2>🧪 模拟攻击者伪造认证令牌</h2>
+        <h2>强不可伪造性攻击模拟</h2>
     </div>
     <form onsubmit="event.preventDefault(); simulateAttack();">
         <div class="mb-3">
@@ -22,10 +22,10 @@ PBC 强不可伪造性攻击模拟
             <label for="message" class="form-label">挑战消息</label>
             <input type="text" class="form-control" id="message" value="testchallenge">
         </div>
-        <button type="submit" class="btn btn-primary w-100">开始攻击</button>
+        <button type="submit" class="btn btn-danger w-100">开始攻击</button>
     </form>
     <pre id="result" class="mt-4 bg-light p-3 rounded" style="white-space: pre-wrap;"></pre>
 </div>
 
-<script src="{{ url_for('static', filename='scripts/attack.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/strong_attack.js') }}"></script>
 {% endblock %}

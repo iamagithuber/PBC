@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}
+PBC 在线不可伪造性攻击模拟
+{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <h2>在线不可伪造性攻击模拟</h2>
+        <p class="text-muted">攻击者伪造密钥尝试通过验证</p>
+    </div>
+    <form onsubmit="event.preventDefault(); startAttack();">
+        <div class="mb-3">
+            <label for="username" class="form-label">用户名</label>
+            <input type="text" class="form-control" id="username" value="alice">
+        </div>
+        <button type="submit" class="btn btn-danger w-100">开始攻击</button>
+    </form>
+    <pre id="result" class="mt-4 bg-light p-3 rounded" style="white-space: pre-wrap;"></pre>
+</div>
+
+<!-- 加载加密依赖 -->
+<script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
+
+<!-- 加载攻击脚本 -->
+<script src="{{ url_for('static', filename='scripts/online_attack.js') }}"></script>
+{% endblock %}
