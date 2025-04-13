@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", function () {
   const button = document.querySelector("form button");
   button.addEventListener("click", startAttack);

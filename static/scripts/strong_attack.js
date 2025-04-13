@@ -1,4 +1,5 @@
 // 使用伪造的sk_sig来对（uid,m）进行签名，加密后得到伪造的τ（fake_token），进行攻击
+
 async function simulateAttack() {
   const username = document.getElementById("username").value;
   const output = document.getElementById("result");

@@ -1,4 +1,5 @@
 // offline_attack.js
+
 const fs = require("fs");
 const readline = require("readline");
 const { F, KGenS } = require("../../crypto-lib");

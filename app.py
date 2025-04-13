@@ -19,7 +19,6 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from flask_cors import CORS
 
 
-
 app = Flask(__name__)
 CORS(app, supports_credentials=True)  # 允许跨域且携带 Cookie
 app.config['SECRET_KEY'] = 'zhengdongyuan'
